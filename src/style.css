@@ -1,0 +1,269 @@
+/* ===== ゲームUI スタイル ===== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ===== レイアウト ===== */
+#game-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#game-header {
+  background: linear-gradient(135deg, #0f3460, #16213e);
+  padding: 12px 20px;
+  border-bottom: 2px solid #e94560;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+#game-header h1 {
+  font-size: 1.4rem;
+  color: #e2c77b;
+  letter-spacing: 0.05em;
+}
+
+#game-header .subtitle {
+  font-size: 0.85rem;
+  color: #8888aa;
+}
+
+#game-body {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ===== マップパネル ===== */
+#map-panel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  background: #16213e;
+  flex-shrink: 0;
+}
+
+#game-canvas {
+  display: block;
+  border: 2px solid #334;
+  border-radius: 4px;
+  cursor: crosshair;
+  max-width: min(640px, calc(100vw - 320px));
+  width: 640px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  image-rendering: pixelated;
+}
+
+/* ===== サイドパネル ===== */
+#side-panel {
+  width: 300px;
+  min-width: 260px;
+  background: #0f3460;
+  border-left: 2px solid #334;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+/* ===== コントロールパネル ===== */
+#controls {
+  padding: 12px;
+  background: #16213e;
+  border-bottom: 1px solid #334;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.controls-row:last-child {
+  margin-bottom: 0;
+}
+
+button {
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary   { background: #e94560; color: #fff; }
+.btn-secondary { background: #4a90d9; color: #fff; }
+.btn-danger    { background: #666; color: #fff; }
+
+.turn-display {
+  font-size: 0.85rem;
+  color: #e2c77b;
+  font-weight: bold;
+  margin-left: auto;
+}
+
+.view-modes {
+  flex-wrap: wrap;
+}
+
+.view-btn {
+  background: #1a3055;
+  color: #aab;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+.view-btn.active {
+  background: #e94560;
+  color: #fff;
+}
+
+label {
+  font-size: 0.78rem;
+  color: #99a;
+}
+
+input[type="range"] {
+  width: 80px;
+  accent-color: #e94560;
+}
+
+/* ===== インスペクター ===== */
+#inspector {
+  padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.inspector-empty {
+  color: #557;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.inspector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.coord {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #e2c77b;
+}
+
+.terrain-badge {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: #334;
+  color: #ccd;
+}
+.terrain-flat    { background: #4a7a28; }
+.terrain-river   { background: #2060bb; }
+.terrain-swamp   { background: #3a6040; }
+.terrain-cliff   { background: #665544; }
+.terrain-forest  { background: #2a5a2a; }
+
+section {
+  margin-bottom: 14px;
+}
+
+section h3 {
+  font-size: 0.75rem;
+  color: #8899bb;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #223;
+  padding-bottom: 4px;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 70px 45px 1fr;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 5px;
+  font-size: 0.78rem;
+}
+
+.stat-row label {
+  color: #99aacc;
+  font-size: 0.75rem;
+}
+
+.stat-row span {
+  text-align: right;
+  color: #dde;
+}
+
+.bar-bg {
+  background: #222a44;
+  border-radius: 3px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.alert {
+  background: rgba(249, 68, 68, 0.2);
+  border: 1px solid #f44;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 0.75rem;
+  color: #f88;
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  #game-body {
+    flex-direction: column;
+  }
+  #side-panel {
+    width: 100%;
+    min-width: unset;
+    border-left: none;
+    border-top: 2px solid #334;
+  }
+  #game-canvas {
+    max-width: 100%;
+    width: 100%;
+  }
+}
