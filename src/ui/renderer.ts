@@ -7,7 +7,7 @@ import { TERRAIN_COLOR, POPULATION_CAP } from '../core/cell';
 const CELL_SIZE = 32; // px per cell
 export const CANVAS_SIZE = MAP_SIZE * CELL_SIZE;
 
-export type ViewMode = 'terrain' | 'population' | 'food' | 'water' | 'dissatisfaction' | 'community';
+export type ViewMode = 'terrain' | 'population' | 'food' | 'water' | 'dissatisfaction' | 'community' | 'player';
 
 export class Renderer {
   private canvas: HTMLCanvasElement;
@@ -92,11 +92,23 @@ export class Renderer {
         const py = y * CELL_SIZE;
 
         // セル背景
-        this.ctx.fillStyle = this.getCellColor(cell, communityColors);
+        this.ctx.fillStyle = this.getCellColor(cell, communityColors, world);
         this.ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
 
+        // 所有者の境界とアイコン位置
+        if (cell.ownerId) {
+          const owner = world.getPlayer(cell.ownerId);
+          if (owner) {
+            this.ctx.strokeStyle = owner.color;
+            this.ctx.lineWidth = 1.8;
+            this.ctx.strokeRect(px + 1.5, py + 1.5, CELL_SIZE - 3, CELL_SIZE - 3);
+            this.ctx.fillStyle = owner.color;
+            this.ctx.fillRect(px + 4, py + 4, 7, 7);
+          }
+        }
+
         // 人口ドット（地形モード時）
-        if (this.viewMode === 'terrain' || this.viewMode === 'community') {
+        if (this.viewMode === 'terrain' || this.viewMode === 'community' || this.viewMode === 'player') {
           const popRatio = cell.population / POPULATION_CAP;
           if (popRatio > 0) {
             this.ctx.fillStyle = `rgba(40,20,0,${Math.min(0.8, popRatio * 0.6)})`;
@@ -114,12 +126,24 @@ export class Renderer {
           this.ctx.strokeRect(px + 1, py + 1, CELL_SIZE - 2, CELL_SIZE - 2);
         }
 
+        // 格納資源の可視化（右下に小さな塗り）
+        if (cell.stocks.food > 0 || cell.stocks.water > 0) {
+          const foodRatio = Math.min(1, cell.stocks.food / 500);
+          const waterRatio = Math.min(1, cell.stocks.water / 400);
+          this.ctx.fillStyle = `rgba(255, 183, 77, ${0.6 + foodRatio * 0.3})`;
+          this.ctx.fillRect(px + CELL_SIZE - 10, py + CELL_SIZE - 12, 4, 4);
+          this.ctx.fillStyle = `rgba(109, 201, 255, ${0.6 + waterRatio * 0.3})`;
+          this.ctx.fillRect(px + CELL_SIZE - 16, py + CELL_SIZE - 12, 4, 4);
+        }
+
         // グリッド線
         this.ctx.strokeStyle = 'rgba(0,0,0,0.15)';
         this.ctx.lineWidth = 0.5;
         this.ctx.strokeRect(px, py, CELL_SIZE, CELL_SIZE);
       }
     }
+
+    this.drawLogistics(world);
 
     // 選択セルのハイライト
     if (this.selectedCell) {
@@ -138,7 +162,41 @@ export class Renderer {
     }
   }
 
-  private getCellColor(cell: Cell, communityColors: string[]): string {
+  private drawLogistics(world: World): void {
+    for (let y = 0; y < MAP_SIZE; y++) {
+      for (let x = 0; x < MAP_SIZE; x++) {
+        const cell = world.cells[y][x];
+        if (!cell.ownerId) continue;
+        const owner = world.getPlayer(cell.ownerId);
+        if (!owner) continue;
+
+        const neighbors = world.getNeighbors(x, y).filter((n) => n.ownerId === cell.ownerId);
+        neighbors.forEach((neighbor) => {
+          const startX = x * CELL_SIZE + CELL_SIZE / 2;
+          const startY = y * CELL_SIZE + CELL_SIZE / 2;
+          const endX = neighbor.x * CELL_SIZE + CELL_SIZE / 2;
+          const endY = neighbor.y * CELL_SIZE + CELL_SIZE / 2;
+
+          this.ctx.beginPath();
+          this.ctx.moveTo(startX, startY);
+          this.ctx.lineTo(endX, endY);
+          this.ctx.strokeStyle = owner.color + '88';
+          this.ctx.lineWidth = 1.5;
+          this.ctx.stroke();
+
+          this.ctx.beginPath();
+          this.ctx.moveTo(endX, endY);
+          this.ctx.lineTo(endX - 5, endY - 4);
+          this.ctx.lineTo(endX - 5, endY + 4);
+          this.ctx.closePath();
+          this.ctx.fillStyle = owner.color + 'CC';
+          this.ctx.fill();
+        });
+      }
+    }
+  }
+
+  private getCellColor(cell: Cell, communityColors: string[], world: World): string {
     switch (this.viewMode) {
       case 'terrain':
         return TERRAIN_COLOR[cell.terrain];
@@ -147,6 +205,16 @@ export class Renderer {
         if (cell.communityId === -2) return '#ff4400'; // 独立
         if (cell.communityId < 0)  return '#888888';
         return communityColors[cell.communityId % communityColors.length];
+      }
+
+      case 'player': {
+        if (cell.ownerId) {
+          const owner = world.getPlayer(cell.ownerId);
+          if (owner) {
+            return owner.color;
+          }
+        }
+        return TERRAIN_COLOR[cell.terrain];
       }
 
       case 'population': {

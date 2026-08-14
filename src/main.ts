@@ -37,6 +37,7 @@ const renderer  = new Renderer(canvas);
 const inspector = new Inspector(inspectorEl);
 
 renderer.setOnCellClick((cell) => {
+  world.setSelectedCell(cell.x, cell.y);
   inspector.update(cell);
 });
 

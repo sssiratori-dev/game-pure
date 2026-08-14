@@ -24,6 +24,9 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(77, 125, 255, 0.2), transparent 30%),
+    linear-gradient(180deg, #0d1325 0%, #121f38 100%);
 }
 
 #game-header {
@@ -33,10 +36,13 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 #game-header h1 {
-  font-size: 1.4rem;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
   color: #e2c77b;
   letter-spacing: 0.05em;
 }
@@ -47,10 +53,12 @@ body {
 }
 
 #game-body {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(290px, 0.9fr);
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
   flex: 1;
-  gap: 0;
-  overflow: hidden;
 }
 
 /* ===== マップパネル ===== */
@@ -58,40 +66,46 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 16px;
-  background: #16213e;
-  flex-shrink: 0;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(18, 31, 56, 0.86), rgba(13, 19, 37, 0.96));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  min-height: 0;
+  min-width: 0;
 }
 
 #game-canvas {
   display: block;
-  border: 2px solid #334;
-  border-radius: 4px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
   cursor: crosshair;
-  max-width: min(640px, calc(100vw - 320px));
-  width: 640px;
+  width: min(100%, 720px);
+  max-width: 100%;
   height: auto;
   aspect-ratio: 1 / 1;
   image-rendering: pixelated;
+  background: #0b1220;
 }
 
 /* ===== サイドパネル ===== */
 #side-panel {
-  width: 300px;
-  min-width: 260px;
-  background: #0f3460;
-  border-left: 2px solid #334;
+  width: 100%;
+  min-width: 0;
+  background: rgba(15, 52, 96, 0.9);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
 }
 
 /* ===== コントロールパネル ===== */
 #controls {
   padding: 12px;
-  background: #16213e;
-  border-bottom: 1px solid #334;
+  background: linear-gradient(180deg, rgba(22, 33, 62, 0.95), rgba(11, 18, 32, 0.96));
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .controls-row {
@@ -123,11 +137,136 @@ button:disabled {
 .btn-secondary { background: #4a90d9; color: #fff; }
 .btn-danger    { background: #666; color: #fff; }
 
+.tab-strip {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px 0;
+  background: rgba(12, 20, 38, 0.7);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.tab-btn {
+  flex: 1;
+  border-radius: 8px 8px 0 0;
+  background: rgba(255,255,255,0.04);
+  color: #dfe7ff;
+  font-weight: 600;
+}
+
+.tab-btn.active {
+  background: #e94560;
+  color: #fff;
+}
+
+.tab-panel {
+  display: none;
+  padding: 12px;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+.mini-panel {
+  background: rgba(12, 20, 38, 0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.mini-panel h3 {
+  font-size: 0.78rem;
+  color: #dfe7ff;
+  margin-bottom: 10px;
+}
+
+.mini-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.74rem;
+  color: #aac0ff;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.mini-stat:last-child {
+  border-bottom: none;
+}
+
+.mini-stat strong {
+  color: #ffd166;
+}
+
 .turn-display {
   font-size: 0.85rem;
   color: #e2c77b;
   font-weight: bold;
   margin-left: auto;
+}
+
+.player-row {
+  justify-content: space-between;
+  color: #dfe7ff;
+  font-size: 0.78rem;
+}
+
+.player-display {
+  color: #ffd166;
+  font-weight: bold;
+}
+
+.player-summary {
+  margin: 6px 0 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: rgba(12, 20, 38, 0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.player-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 4px 12px;
+  align-items: center;
+  color: #dfe7ff;
+  font-size: 0.74rem;
+}
+
+.player-summary-grid strong {
+  color: #ffd166;
+}
+
+.action-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-action {
+  background: #2d5d9f;
+  color: #fff;
+  flex: 1;
+}
+
+.action-notice {
+  margin: 8px 0 12px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  color: #dfe7ff;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.action-notice[data-state="error"] {
+  background: rgba(255, 88, 88, 0.18);
+  color: #ffb0b0;
+}
+
+.action-notice[data-state="ok"] {
+  background: rgba(88, 255, 164, 0.12);
+  color: #baffd6;
 }
 
 .view-modes {
@@ -253,17 +392,68 @@ section h3 {
 }
 
 @media (max-width: 700px) {
-  #game-body {
+  #game-root {
+    min-height: 100dvh;
+  }
+
+  #game-header {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 12px 14px;
   }
+
+  #game-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  #map-panel {
+    padding: 8px;
+    min-height: 52vh;
+    order: 1;
+  }
+
   #side-panel {
+    order: 2;
     width: 100%;
-    min-width: unset;
-    border-left: none;
-    border-top: 2px solid #334;
+    min-width: 0;
+    border-radius: 10px;
+    border-left: 1px solid rgba(255,255,255,0.08);
   }
+
   #game-canvas {
-    max-width: 100%;
-    width: 100%;
+    width: min(100%, 560px);
+    max-width: calc(100vw - 28px);
+  }
+
+  .tab-strip {
+    gap: 4px;
+    padding: 8px 8px 0;
+  }
+
+  .controls-row {
+    gap: 6px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-action,
+  .view-btn,
+  .tab-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .player-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-row {
+    flex-wrap: wrap;
   }
 }

@@ -52,6 +52,8 @@ export interface Culture {
 }
 
 // セルの完全データ構造
+import type { PlayerId } from './player';
+
 export interface Cell {
   x: number;
   y: number;
@@ -63,6 +65,7 @@ export interface Cell {
   culture: Culture;
   dissatisfaction: number; // 総不満度 U
   communityId: number;    // 所属コミュニティID（-1 = 独立/未所属）
+  ownerId: PlayerId | null; // 支配プレイヤーID
   buildingBonus: number;  // 建設による抵抗軽減値
 }
 
@@ -107,6 +110,7 @@ export function createCell(x: number, y: number, terrain: Terrain): Cell {
     },
     dissatisfaction: 0,
     communityId: -1,
+    ownerId: null,
     buildingBonus: 0,
   };
 }

@@ -47,12 +47,30 @@ export class Inspector {
 
     const dissColor = cell.dissatisfaction > cell.culture.historicalContinuity
       ? '#f44336' : cell.dissatisfaction > 0.5 ? '#ff9800' : '#4caf50';
+    const world = (window as any).__world as {
+      getPlayer?: (id: string | null) => { id: string; name: string; color: string; icon?: string } | null;
+      getOwnedCells?: (id: string) => unknown[];
+    } | undefined;
+    const owner = world?.getPlayer ? world.getPlayer(cell.ownerId) : null;
+    const territoryCount = owner && world?.getOwnedCells ? world.getOwnedCells(owner.id).length : 0;
 
     this.container.innerHTML = `
       <div class="inspector-header">
         <span class="coord">座標 (${cell.x}, ${cell.y})</span>
         <span class="terrain-badge terrain-${cell.terrain}">${terrainLabel(cell.terrain)}</span>
       </div>
+
+      <section>
+        <h3>🧭 支配情報</h3>
+        <div class="stat-row">
+          <label>支配者</label>
+          <span>${owner ? `${owner.icon ?? '◆'} <span style="color:${owner.color}">${owner.name}</span>` : '未確定'}</span>
+        </div>
+        <div class="stat-row">
+          <label>領域数</label>
+          <span>${territoryCount}</span>
+        </div>
+      </section>
 
       <section>
         <h3>👥 人口</h3>
