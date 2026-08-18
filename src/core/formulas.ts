@@ -5,6 +5,12 @@
 
 import type { Cell } from './cell';
 
+export interface FormulaAdjustments {
+  phiLanguageWeight: number;
+  phiTerrainWeight: number;
+  phiCivilizationWeight: number;
+}
+
 // シグモイド緩和関数（計算カオス回避）
 // 出典: docs/ゲームシステム/統合補正係数 Φ の掛け合わせ構造.docx
 function sigmoid(x: number): number {
@@ -51,10 +57,11 @@ function civilizationCorrectionFactor(cell: Cell): number {
 
 // 統合補正係数 Φ = ∏(各補正)
 // 出典: docs/ゲームシステム/基本更新式.docx
-export function calcPhi(cell: Cell): number {
-  const phi_lang = languageCorrectionFactor(cell);
-  const phi_terrain = terrainCorrectionFactor(cell);
-  const phi_civ = civilizationCorrectionFactor(cell);
+export function calcPhi(cell: Cell, adjustments?: FormulaAdjustments): number {
+  const tuning = adjustments ?? { phiLanguageWeight: 1, phiTerrainWeight: 1, phiCivilizationWeight: 1 };
+  const phi_lang = languageCorrectionFactor(cell) * tuning.phiLanguageWeight;
+  const phi_terrain = terrainCorrectionFactor(cell) * tuning.phiTerrainWeight;
+  const phi_civ = civilizationCorrectionFactor(cell) * tuning.phiCivilizationWeight;
   const raw = phi_lang * phi_terrain * phi_civ;
   return clampPhi(raw);
 }

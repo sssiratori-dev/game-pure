@@ -24,7 +24,7 @@ function checkRebellion(cell: Cell, world: World): void {
 
 // 文化伝播と収斂（隣接セルとの相互影響）
 // 出典: docs/ゲームシステム/人文.docx「言語が同一の場合、自然と文化ステータスが近似する」
-function culturalConvergence(cell: Cell, neighbors: Cell[]): void {
+function culturalConvergence(cell: Cell, neighbors: Cell[], convergenceRate: number): void {
   const sameLanguageNeighbors = neighbors.filter(
     n => n.culture.languageGroup === cell.culture.languageGroup
   );
@@ -36,13 +36,13 @@ function culturalConvergence(cell: Cell, neighbors: Cell[]): void {
     ) / sameLanguageNeighbors.length;
 
     cell.culture.culturalStrength +=
-      (avgStrength - cell.culture.culturalStrength) * 0.01;
+      (avgStrength - cell.culture.culturalStrength) * (0.01 + cell.humanitiesBonus * 0.004) * convergenceRate;
   }
 }
 
 // 歴史継続性の更新
 // 出典: docs/ゲームシステム/人文.docx「同一文化が継続すると文化変化への耐性が高まる」
-function updateHistoricalContinuity(cell: Cell, neighbors: Cell[]): void {
+function updateHistoricalContinuity(cell: Cell, neighbors: Cell[], historicalRate: number, culturalPressure: number): void {
   const avgCulturalDist = neighbors.reduce(
     (sum, n) => sum + culturalDistance(cell, n), 0
   ) / Math.max(1, neighbors.length);
@@ -51,23 +51,24 @@ function updateHistoricalContinuity(cell: Cell, neighbors: Cell[]): void {
     // 文化的に近い隣接セルに囲まれている → 歴史継続性が増加
     cell.culture.historicalContinuity = Math.min(
       1.0,
-      cell.culture.historicalContinuity + 0.002
+      cell.culture.historicalContinuity + (0.002 + cell.humanitiesBonus * 0.0025) * historicalRate
     );
   } else if (avgCulturalDist > 0.6) {
     // 異文化圧力 → カルマ蓄積、不満度上昇
     // 出典: docs/ゲームシステム/人文.docx「文化の差が大きく距離が近いとカルマが溜まる」
-    cell.dissatisfaction = Math.min(1, cell.dissatisfaction + 0.01);
+    cell.dissatisfaction = Math.min(1, cell.dissatisfaction + Math.max(0.002, 0.01 - cell.humanitiesBonus * 0.005) * culturalPressure);
   }
 }
 
 // 不満度の自然回復（満足できている時は不満が下がる）
-function dissatisfactionRecovery(cell: Cell): void {
+function dissatisfactionRecovery(cell: Cell, recoveryRate: number): void {
   if (cell.stocks.food > 100 && cell.stocks.water > 50) {
-    cell.dissatisfaction = Math.max(0, cell.dissatisfaction - 0.02);
+    cell.dissatisfaction = Math.max(0, cell.dissatisfaction - (0.02 + cell.humanitiesBonus * 0.01) * recoveryRate);
   }
 }
 
 export function runHumanities(world: World): void {
+  const tuning = world.advancedTuning;
   for (const cell of world.allCells()) {
     const neighbors = world.getNeighbors(cell.x, cell.y);
 
@@ -75,13 +76,16 @@ export function runHumanities(world: World): void {
     updateCivilizationLevel(cell);
 
     // 文化収斂
-    culturalConvergence(cell, neighbors);
+    culturalConvergence(cell, neighbors, tuning.culturalConvergenceRate);
 
     // 歴史継続性更新
-    updateHistoricalContinuity(cell, neighbors);
+    updateHistoricalContinuity(cell, neighbors, tuning.historicalContinuityRate, tuning.culturalPressureRate);
 
     // 不満度回復
-    dissatisfactionRecovery(cell);
+    dissatisfactionRecovery(cell, tuning.dissatisfactionRecoveryRate);
+
+    // 文化施設・市場による文化蓄積補正
+    cell.culture.cultureStock += cell.humanitiesBonus * 0.9;
 
     // 謀反・離反チェック
     checkRebellion(cell, world);

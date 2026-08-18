@@ -2,7 +2,8 @@
 // セルクリック時に詳細情報を右パネルに表示
 
 import type { Cell } from '../core/cell';
-import { POPULATION_CAP } from '../core/cell';
+import { BUILDING_LABELS, BUILDING_SPECS, getEffectivePopulationCap, getOccupiedBuildingSlots, MAX_BUILDING_SLOTS } from '../core/cell';
+import type { World } from '../core/world';
 
 export class Inspector {
   private container: HTMLElement;
@@ -47,12 +48,17 @@ export class Inspector {
 
     const dissColor = cell.dissatisfaction > cell.culture.historicalContinuity
       ? '#f44336' : cell.dissatisfaction > 0.5 ? '#ff9800' : '#4caf50';
-    const world = (window as any).__world as {
-      getPlayer?: (id: string | null) => { id: string; name: string; color: string; icon?: string } | null;
-      getOwnedCells?: (id: string) => unknown[];
-    } | undefined;
-    const owner = world?.getPlayer ? world.getPlayer(cell.ownerId) : null;
-    const territoryCount = owner && world?.getOwnedCells ? world.getOwnedCells(owner.id).length : 0;
+    const world = (window as any).__world as World | undefined;
+    const owner = world?.getPlayer(cell.ownerId) ?? null;
+    const ownerAssets = owner ? world?.getPlayerAssets(owner.id) : null;
+    const effectiveCap = getEffectivePopulationCap(cell);
+    const buildingRows = (Object.entries(cell.buildings) as Array<[keyof typeof cell.buildings, number]>)
+      .filter(([, level]) => level > 0)
+      .map(([type, level]) => {
+        const spec = BUILDING_SPECS[type];
+        return `<div class="stat-row"><label>${BUILDING_LABELS[type]}</label><span>Lv.${level} (維持 AP${(spec.upkeepActionPoints * level).toFixed(1)} / 金${spec.upkeepGold * level})</span></div>`;
+      })
+      .join('');
 
     this.container.innerHTML = `
       <div class="inspector-header">
@@ -68,16 +74,32 @@ export class Inspector {
         </div>
         <div class="stat-row">
           <label>領域数</label>
-          <span>${territoryCount}</span>
+          <span>${ownerAssets ? ownerAssets.territory : 0}</span>
+        </div>
+        <div class="stat-row">
+          <label>保有資金</label>
+          <span>${owner ? Math.round(owner.gold) : 0}</span>
         </div>
       </section>
 
       <section>
         <h3>👥 人口</h3>
         <div class="stat-row">
-          <span>${cell.population} / ${POPULATION_CAP} 人</span>
-          ${bar(cell.population, POPULATION_CAP)}
+          <span>${cell.population} / ${effectiveCap} 人</span>
+          ${bar(cell.population, effectiveCap)}
         </div>
+      </section>
+
+      <section>
+        <h3>🏗️ 建設状況</h3>
+        <div class="stat-row"><label>使用スロット</label><span>${getOccupiedBuildingSlots(cell)} / ${MAX_BUILDING_SLOTS}</span></div>
+        ${buildingRows || '<div class="stat-row"><label>施設</label><span>なし</span></div>'}
+        <div class="stat-row"><label>居住上限補正</label><span>+${cell.populationCapacityBonus}</span></div>
+        <div class="stat-row"><label>防衛補正</label><span>${(cell.defenseBonus * 100).toFixed(1)}%</span></div>
+        <div class="stat-row"><label>生産補正</label><span>${(cell.productionBonus * 100).toFixed(1)}%</span></div>
+        <div class="stat-row"><label>物流補正</label><span>${(cell.logisticsBonus * 100).toFixed(1)}%</span></div>
+        <div class="stat-row"><label>経済補正</label><span>${(cell.economicBonus * 100).toFixed(1)}%</span></div>
+        <div class="stat-row"><label>人文補正</label><span>${(cell.humanitiesBonus * 100).toFixed(1)}%</span></div>
       </section>
 
       <section>
